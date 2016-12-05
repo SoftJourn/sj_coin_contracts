@@ -1,0 +1,23 @@
+jobs:
+
+- name: setBeneficiaryBase
+  job:
+    account:
+      address: 1DC291BD1315E253503EFCE7AA6585096A06D05F
+
+- name: setFundingGoalBase
+  job:
+    set:
+      val: 10000
+
+- name: setDurationBase
+  job:
+    set:
+      val: 14400
+
+- name: deployCrowdsale
+  job:
+    deploy:
+      contract: crowdsale.sol
+      data: $setBeneficiaryBase $setFundingGoalBase $setDurationBase
+      wait: true

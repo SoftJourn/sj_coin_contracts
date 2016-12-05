@@ -1,0 +1,51 @@
+jobs:
+
+- name: setColorBase1
+  job:
+    set:
+      val: 5
+
+- name: setColorBase2
+  job:
+    set:
+      val: 1
+
+- name: deployCoin
+  job:
+    deploy:
+      contract: Coin.sol
+      data: $setColorBase1
+      wait: true
+
+- name: queryConstructor
+  job:
+    query-contract:
+      destination: $deployCoin
+      data: getColor
+
+- name: assertConstructorColor
+  job:
+    assert:
+      key: $queryConstructor
+      relation: eq
+      val: $setColorBase1
+
+- name: callCoin
+  job:
+    call:
+      destination: $deployCoin
+      data: setColor $setColorBase2
+      wait: true
+
+- name: queryColor
+  job:
+    query-contract:
+      destination: $deployCoin
+      data: getColor
+
+- name: assertQueryColor
+  job:
+    assert:
+      key: $queryColor
+      relation: eq
+      val: $setColorBase2

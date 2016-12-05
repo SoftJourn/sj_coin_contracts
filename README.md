@@ -1,1 +1,4 @@
-# sj_coin_contracts
+### Softjourn Coin Contracts
+
+Solidity contract repository
+
