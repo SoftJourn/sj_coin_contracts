@@ -1,0 +1,12 @@
+jobs:
+- name: deployCrowdSale
+  job:
+    deploy:
+      contract: Crowdsale.sol
+      instance: Crowdsale
+      data:
+        - "0x8F75CB79AF874CB10147E4E104AD01C6F2A581A9"
+        - 200
+        - 20
+        - "[0x6B33A557FC0B928868482E98979AA99EB665B41B]"
+      wait: true

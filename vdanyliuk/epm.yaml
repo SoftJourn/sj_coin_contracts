@@ -1,0 +1,7 @@
+jobs:
+- name: deployToken
+  job:
+    deploy:
+      contract: CoinsToken.sol
+      instance: CoinsToken
+      wait: true

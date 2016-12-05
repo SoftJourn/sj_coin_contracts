@@ -1,0 +1,7 @@
+jobs:
+- name: deployOffline
+  job:
+    deploy:
+      contract: OfflineRecipient.sol
+      instance: OfflineRecipient
+      wait: true
