@@ -1,0 +1,29 @@
+[{   
+	"constant":false,
+	"inputs":[{"name":"name","type":"bytes32"}],
+	"name":"checkCampaign",
+	"outputs":[],
+	"payable":false,
+	"type":"function"
+ },
+ {
+ 	"constant":true,
+ 	"inputs":[{"name":"","type":"uint256"}],
+ 	"name":"campaignNames",
+ 	"outputs":[{"name":"","type":"bytes32"}],
+ 	"payable":false,
+ 	"type":"function"
+ },
+...
+{
+	"constant":true,
+	"inputs":[{"name":"","type":"bytes32"}],
+	"name":"campaigns",
+	"outputs":[
+		{"name":"recipient","type":"address"},
+		{"name":"tippingPointWei","type":"uint256"},
+		{"name":"totalWei","type":"uint256"},
+		{"name":"tipped","type":"bool"}],
+	"payable":false,
+	"type":"function"},
+...

@@ -1,0 +1,7 @@
+jobs:
+
+- name: deployCoin
+  job:
+    deploy:
+      contract: Coin.sol
+      wait: true
