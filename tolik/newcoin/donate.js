@@ -8,6 +8,7 @@ var erisdbURL = "http://localhost:1337/rpc";
 // get the abi and deployed data squared away
 var contractData = require('./epm.json');
 var coinContractAddress = contractData["deployCoin"];
+//var coinContractAddress = "1362F2BD1FDF54543E82807673CF285B84BE0C55";
 var coinAbi = JSON.parse(fs.readFileSync("./abi/" + coinContractAddress));
 
 var donateData = require('../crowdsale/epm.json');
@@ -23,8 +24,10 @@ var contractsManager = erisC.newContractManagerDev(erisdbURL, who);
 var coinContract = contractsManager.newContractFactory(coinAbi).at(coinContractAddress);
 
 function donateCoin(sender, spender, amount) {
+  console.log("donate " + amount + " to " + spender);
   coinContract.approveAndCall(spender, amount, function(error, result){
     if (error) { throw error }
+    console.log("donation result: " + result);
     queryBalanceCoin(sender,function(){});
     queryBalanceCoin(spender,function(){});
   });
@@ -52,11 +55,11 @@ function checkAllowance(from, to) {
   });
 }
 
-function runIssuerWallet() {
+function runDonation() {
   //approveAllowance(who.address, donateContractAddr, 5000);
-  checkAllowance(who.address, donateContractAddr);
-  //donateCoin(who.address, donateContractAddr, 4000);
+  //checkAllowance(who.address, donateContractAddr);
+  donateCoin(who.address, donateContractAddr, 500);
 }
 
 // run
-runIssuerWallet();
+runDonation();

@@ -3,17 +3,17 @@ jobs:
 - name: setBeneficiaryBase
   job:
     account:
-      address: 1DC291BD1315E253503EFCE7AA6585096A06D05F
+      address: 2D399D48D853F2B5D9AE34D0CC3DDF53C707CB8B
 
 - name: setFundingGoalBase
   job:
     set:
-      val: 10000
+      val: 1000
 
 - name: setDurationBase
   job:
     set:
-      val: 14400
+      val: 10
 
 - name: deployCrowdsale
   job:

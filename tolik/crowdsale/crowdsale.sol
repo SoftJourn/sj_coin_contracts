@@ -1,3 +1,9 @@
+contract Token {
+  event Transfer(address from, address to, uint value);
+  event Approval(address from, address to, uint value);
+  function transferFrom(address from, address to, uint amount) returns (bool success);
+  function transfer(address receiver, uint amount) returns (bool);
+}
 contract Crowdsale {
   address public beneficiary;
   address public creator;
@@ -21,6 +27,7 @@ contract Crowdsale {
     fundingGoal = fundingGoalInTokens;
     deadline = now + durationInMinutes * 1 minutes;
   }
+  /* You must run this once only with the same tokens or else :) */
   function setTokens(address[] addressOfTokensAccumulated) returns (uint) {
     if (msg.sender != beneficiary && msg.sender != creator) throw;
     uint keyIndex = 0;
@@ -35,22 +42,24 @@ contract Crowdsale {
   function getTokensCount() returns (uint) {
     return tokensAccumulated.length;
   }
-  /* The function without name is the default function that is called whenever anyone sends funds to a contract */
-  function receiveApproval(address _from, uint _value, address _token, bytes _extraData) {
-    if (crowdsaleClosed) throw;
+  function isTokenAccumulated(address _token) returns (bool) {
+    if (crowdsaleClosed) return false;
     uint keyIndex = 0;
-    bool notFound = true;
     while (keyIndex < tokensAccumulated.length) {
       if (_token == tokensAccumulated[keyIndex]) {
-        notFound = false;
-        break;
+        return true;
       }
       keyIndex++;
     }
-    if (notFound) throw;
+    return false;    
+  }
+  /* The function without name is the default function that is called whenever anyone sends funds to a contract */
+  function receiveApproval(address _from, uint _value, address _token, bytes _extraData) returns (bool)
+ {
+    if (!isTokenAccumulated(_token)) return false;
     address _to = this;
-    if(!_token.call(bytes4(bytes32(sha3("transferFrom(address,address,uint)"))), _from, _to, _value)) {
-      throw;
+    if(!Token(_token).transferFrom(_from, _to, _value)) {
+      return false;
     }
     if (balanceOf[_from][_token] == uint(0x0)) {
       balanceOf[_from][_token] = _value;
@@ -60,6 +69,7 @@ contract Crowdsale {
     tokenAmounts[_token] += _value;
     amountRaised += _value;
     FundTransfer(_from, _token, _value, true);
+    return true;
   }
   /* checks if the goal or time limit has been reached and ends the campaign */
   function checkGoalReached() {
@@ -85,7 +95,7 @@ contract Crowdsale {
           amount = balanceOf[msg.sender][coin];
           balanceOf[msg.sender][coin] = 0;
           if (amount > 0) {
-            if (coin.call(bytes4(bytes32(sha3("transfer(address,uint)"))), msg.sender, amount)) {
+            if (Token(coin).transfer(msg.sender, amount)) {
               FundTransfer(msg.sender, coin, amount, false);
             } else {
               balanceOf[msg.sender][coin] = amount;
@@ -103,7 +113,7 @@ contract Crowdsale {
         if (tokensAccumulated[keyIndex] != address(0x0)) {
           coin = tokensAccumulated[keyIndex];
           amount = tokenAmounts[coin];
-          if (coin.call(bytes4(bytes32(sha3("transfer(address,uint)"))), beneficiary, amount)) {
+          if (Token(coin).transfer(beneficiary, amount)) {
             FundTransfer(beneficiary, tokensAccumulated[keyIndex], amountRaised, false);
             delete tokenAmounts[coin];
           } else {

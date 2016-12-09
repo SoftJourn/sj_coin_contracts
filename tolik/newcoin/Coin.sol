@@ -1,3 +1,7 @@
+contract Recipient {
+  event ReceivedApproval(address from, uint value, address tokenContract, bytes extraData);
+  function receiveApproval(address from, uint value, address token, bytes extraData) returns (bool);
+}
 contract Coin {
   address minter;
   uint8 public tokenColor;
@@ -45,11 +49,10 @@ contract Coin {
       Approval(msg.sender, spender, amount);
       return;
   }
-  function approveAndCall(address spender, uint amount) {
+  function approveAndCall(address spender, uint amount) returns (bool success) {
       allowed[msg.sender][spender] = amount;
       Approval(msg.sender, spender, amount);
-      if(!spender.call(bytes4(bytes32(sha3("receiveApproval(address,uint,address,bytes)"))), msg.sender, amount, this, "\x00")) { throw; }
-      return;
+      return Recipient(spender).receiveApproval(msg.sender, amount, this, "\x00");
   }
   function allowance(address owner, address spender) constant returns (uint remaining) {
       return allowed[owner][spender];

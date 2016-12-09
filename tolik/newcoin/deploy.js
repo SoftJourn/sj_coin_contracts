@@ -11,8 +11,8 @@ var erisdbURL = "http://localhost:1337/rpc";
 var accountData = require('./accounts.json');
 
 //source of the smart contract
-var contractSource = fs.readFileSync("./Coin.sol", 'utf8');
-const compiled = solc.compile(contractSource, 1).contracts['Coin'];
+var contractSource = fs.readFileSync("../vdsale/Crowdsale.sol", 'utf8');
+const compiled = solc.compile(contractSource, 1).contracts['Crowdsale'];
 const abi = JSON.parse(compiled.interface);
 
 var pipe = new erisC.pipes.DevPipe(erisdbURL, accountData.simplechain_full_000);

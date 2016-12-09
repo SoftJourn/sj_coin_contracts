@@ -40,14 +40,22 @@ function queryBalanceCoin(addr, callback) {
   });
 }
 
-function runIssuerWallet() {
-  //mintCoin(accountData.simplechain_full_000.address, 10000);
+function seedMoney() {
+  mintCoin(accountData.simplechain_full_000.address, 100000);
+  sendCoin(accountData.simplechain_root_000.address, 50000);
+  sendCoin(accountData.simplechain_root_001.address, 50000);
+}
+
+function querySeed() {
   queryBalanceCoin(accountData.simplechain_full_000.address,function(){});
-  //sendCoin(accountData.simplechain_root_000.address, 5000);
   queryBalanceCoin(accountData.simplechain_root_000.address,function(){});
-  //sendCoin(accountData.simplechain_root_001.address, 5000);
   queryBalanceCoin(accountData.simplechain_root_001.address,function(){});
 }
 
+function runSeed() {
+  //seedMoney();
+  querySeed();
+}
+
 // run
-runIssuerWallet();
+runSeed();

@@ -63,10 +63,17 @@ function getInfo() {
   });*/
 }
 
+function withdraw() {
+  saleContract.safeWithdrawal(function(error, result){
+    console.log("safeWithdrawal: \t\t"+result);
+  }); 
+}
+
 function runCrowdsale() {
-  var coins = new Array("51B242DB1EF7DF6682A1409E09BFF8A3933E8214","115348972793B1950D6C0D8E836F2C3828FCA478");
+  var coins = new Array("1362F2BD1FDF54543E82807673CF285B84BE0C55","02C58F28348774E53ACC58015C900068B9D0AFB8");
   //setCoins(coins);
-  getInfo();
+  //getInfo();
+  withdraw();
 }
 
 // run
