@@ -41,6 +41,9 @@ function getInfo() {
   saleContract.deadline(function(error, result){
     console.log("Deadline: \t\t"+result);
   });
+  saleContract.closeOnGoalReached(function(error, result){
+    console.log("Close on goal reached: \t"+result);
+  });
   /*
   saleContract.addressOfTokensAccumulated(function(error, result){
     console.log("Address of tokens accumulated: "+result);
@@ -63,6 +66,12 @@ function getInfo() {
   });*/
 }
 
+function checkGoalReached() {
+  saleContract.checkGoalReached(function(error, result){
+    console.log("checkGoalReached: \t\t"+result);
+  }); 
+}
+
 function withdraw() {
   saleContract.safeWithdrawal(function(error, result){
     console.log("safeWithdrawal: \t\t"+result);
@@ -73,7 +82,8 @@ function runCrowdsale() {
   var coins = new Array("1362F2BD1FDF54543E82807673CF285B84BE0C55","02C58F28348774E53ACC58015C900068B9D0AFB8");
   //setCoins(coins);
   //getInfo();
-  withdraw();
+  //checkGoalReached();
+  //withdraw();
 }
 
 // run

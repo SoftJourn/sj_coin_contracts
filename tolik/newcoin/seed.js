@@ -8,6 +8,7 @@ var erisdbURL = "http://localhost:1337/rpc";
 // get the abi and deployed data squared away
 var contractData = require('./epm.json');
 var coinContractAddress = contractData["deployCoin"];
+//var coinContractAddress = "1362F2BD1FDF54543E82807673CF285B84BE0C55";
 var coinAbi = JSON.parse(fs.readFileSync("./abi/" + coinContractAddress));
 
 // properly instantiate the contract objects manager using the erisdb URL

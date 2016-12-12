@@ -15,9 +15,14 @@ jobs:
     set:
       val: 10
 
+- name: setOnGoalReachedBase
+  job:
+    set:
+      val: true
+
 - name: deployCrowdsale
   job:
     deploy:
       contract: crowdsale.sol
-      data: $setBeneficiaryBase $setFundingGoalBase $setDurationBase
+      data: $setBeneficiaryBase $setFundingGoalBase $setDurationBase $setOnGoalReachedBase
       wait: true

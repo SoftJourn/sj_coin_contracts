@@ -7,7 +7,7 @@ contract Token {
 contract Crowdsale {
   address public beneficiary;
   address public creator;
-  uint public fundingGoal; uint public amountRaised; uint public deadline;
+  uint public fundingGoal; uint public amountRaised; uint public deadline; bool public closeOnGoalReached;
   address[] public tokensAccumulated;
   mapping(address => mapping(address => uint)) public balanceOf;
   mapping(address => uint) public tokenAmounts;
@@ -20,12 +20,14 @@ contract Crowdsale {
   function Crowdsale(
       address ifSuccessfulSendTo,
       uint fundingGoalInTokens,
-      uint durationInMinutes
+      uint durationInMinutes,
+      bool onGoalReached
   ) {
     creator = msg.sender;
     beneficiary = ifSuccessfulSendTo;
     fundingGoal = fundingGoalInTokens;
     deadline = now + durationInMinutes * 1 minutes;
+    closeOnGoalReached = onGoalReached;
   }
   /* You must run this once only with the same tokens or else :) */
   function setTokens(address[] addressOfTokensAccumulated) returns (uint) {
@@ -72,17 +74,21 @@ contract Crowdsale {
     return true;
   }
   /* checks if the goal or time limit has been reached and ends the campaign */
-  function checkGoalReached() {
-    if (now >= deadline) {
+  function checkGoalReached() returns (bool) {
+    if (now >= deadline || closeOnGoalReached) {
       if (amountRaised >= fundingGoal){
           fundingGoalReached = true;
           GoalReached(beneficiary, amountRaised);
       }
-      crowdsaleClosed = true;
+      if (now >= deadline) {
+        crowdsaleClosed = true;
+      }
     }
+    return crowdsaleClosed;
   }
-  function safeWithdrawal() {
-    if (now < deadline) throw;
+  function safeWithdrawal() returns (bool) {
+    /* Do not allow to withdraw anything util crowdsale is closed */
+    if (!checkGoalReached()) return false;
     uint keyIndex;
     address coin;
     uint amount;
@@ -104,6 +110,7 @@ contract Crowdsale {
         }
         keyIndex++;
       }
+      return true;
     }
     /* if funding goal is reached then beneficiary can withdraw everything */
     if (fundingGoalReached && beneficiary == msg.sender) {
@@ -117,13 +124,13 @@ contract Crowdsale {
             FundTransfer(beneficiary, tokensAccumulated[keyIndex], amountRaised, false);
             delete tokenAmounts[coin];
           } else {
-            //If we fail to send the funds to beneficiary, unlock funders balance
-            //fundingGoalReached = false;
-            /* WUT??? */
+            throw; // Hopefully throw will roll back anything we sent to the blockchain so far
           }            
         }
         keyIndex++;
       }
+      return true;
     }
+    return false;
   }
 }
