@@ -1,3 +1,4 @@
+pragma solidity ^0.4.4;
 contract Token {
   event Transfer(address from, address to, uint value);
   event Approval(address from, address to, uint value);
