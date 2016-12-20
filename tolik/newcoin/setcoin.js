@@ -8,7 +8,8 @@ var erisdbURL = "http://localhost:1337/rpc";
 // get the abi and deployed data squared away
 var contractData = require('../crowdsale/epm.json');
 //var saleContractAddress = contractData["deployCrowdsale"];
-var saleContractAddress = '9E8DA1F596ECE00F13110448CBF3FC7DF3457588';
+//var saleContractAddress = '3ECC2E6CE35DBDFF9A6936367CD4A885FAA8AB5D';
+var saleContractAddress = '224867A1E43D2308A3C5AD0AC58BF0684C9DC059';
 var saleAbi = JSON.parse(fs.readFileSync("../crowdsale/abi/" + saleContractAddress));
 
 // properly instantiate the contract objects manager using the erisdb URL
@@ -52,6 +53,7 @@ function getInfo() {
 */
   saleContract.getTokensCount(function(error, result){
     console.log("Tokens accumulated: \t"+result);
+    if (typeof result != "undefined")
     for (i=0; i<result.toNumber(); i++) {
       saleContract.tokensAccumulated(i, function(error, result){
         console.log("\ttoken => " + result);
@@ -81,8 +83,8 @@ function withdraw() {
 
 function runCrowdsale() {
   var coins = new Array("1362F2BD1FDF54543E82807673CF285B84BE0C55","02C58F28348774E53ACC58015C900068B9D0AFB8");
-  setCoins(coins);
-  //getInfo();
+  //setCoins(coins);
+  getInfo();
   //checkGoalReached();
   //withdraw();
 }

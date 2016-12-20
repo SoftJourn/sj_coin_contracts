@@ -22,20 +22,17 @@ contract Crowdsale {
       address ifSuccessfulSendTo,
       uint fundingGoalInTokens,
       uint durationInMinutes,
-      bool onGoalReached,
-      address[] addressOfTokensAccumulated
+      bool onGoalReached
   ) {
     creator = msg.sender;
     beneficiary = ifSuccessfulSendTo;
     fundingGoal = fundingGoalInTokens;
     deadline = now + durationInMinutes * 1 minutes;
     closeOnGoalReached = onGoalReached;
-    setTokens(addressOfTokensAccumulated);
   }
   /* You must run this once only with the same tokens or else :) */
-  function setTokens(address[] addressOfTokensAccumulated) internal returns (uint) {
-    if (msg.sender != beneficiary && msg.sender != creator) return 0;
-    //tokensAccumulated = new address[](0);
+  function setTokens(address[] addressOfTokensAccumulated) returns (uint) {
+    if (msg.sender != beneficiary && msg.sender != creator) throw;
     uint keyIndex = 0;
     while (keyIndex < addressOfTokensAccumulated.length) {
       address token = addressOfTokensAccumulated[keyIndex];
@@ -45,10 +42,10 @@ contract Crowdsale {
     }
     return keyIndex;
   }
-  function getTokensCount() constant returns (uint) {
+  function getTokensCount() returns (uint) {
     return tokensAccumulated.length;
   }
-  function isTokenAccumulated(address _token) constant returns (bool) {
+  function isTokenAccumulated(address _token) returns (bool) {
     if (crowdsaleClosed) return false;
     uint keyIndex = 0;
     while (keyIndex < tokensAccumulated.length) {
