@@ -1,0 +1,34 @@
+jobs:
+
+- name: setBeneficiaryBase
+  job:
+    set:
+      val: "0x18933B7E49E300E10912A18667268E0925A00945"
+
+- name: setFundingGoalBase
+  job:
+    set:
+      val: 1000
+
+- name: setDurationBase
+  job:
+    set:
+      val: 10
+
+- name: setOnGoalReachedBase
+  job:
+    set:
+      val: true
+
+- name: setTokens
+  job:
+    set:
+      val: "[0x9F556334D19893D64F82F33936CADE59AD18F7BB]"
+
+- name: deployCrowdsale
+  job:
+    deploy:
+      contract: crowdsale.sol
+      instance: Crowdsale
+      data: $setBeneficiaryBase $setFundingGoalBase $setDurationBase $setOnGoalReachedBase $setTokens
+      wait: true
