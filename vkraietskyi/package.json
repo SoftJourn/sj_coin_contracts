@@ -10,7 +10,6 @@
   "license": "MIT",
   "dependencies": {
     "eris-contracts": "^0.15.9",
-    "eris-db": "^0.15.10",
     "require": "^2.4.20",
     "solc": "^0.4.8"
   }

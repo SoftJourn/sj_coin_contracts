@@ -6,12 +6,13 @@ import (
 )
 
 func main() {
-	url := "http://172.17.0.4:9099/compile"
+	url := "http://172.17.0.3:9099/compile"
+	//filename := "Coin.sol"
 	filename := "crowdsale.sol"
-	optimize := true
-	librariesString := "maLibrariez:0x1234567890"
+	optimize := false
+	//librariesString := "maLibrariez:0x1234567890"
 
-	output, err := client.BeginCompile(url, filename, optimize, librariesString)
+	output, err := client.BeginCompile(url, filename, optimize, "")
 
 	contractName := output.Objects[0].Objectname // contract C would give you C here
 	binary := output.Objects[0].Bytecode // gives you the binary
