@@ -110,6 +110,9 @@ contract Crowdsale {
       if (now >= deadline) {
         crowdsaleClosed = true;
       }
+      if (fundingGoalReached) {
+        crowdsaleClosed = true;
+      }
     }
     return crowdsaleClosed;
   }
