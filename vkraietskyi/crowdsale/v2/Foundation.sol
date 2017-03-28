@@ -9,7 +9,7 @@ contract Token {
 }
 
 
-contract Crowdsale {
+contract Foundation {
 
     struct Detail {
     uint amount;
@@ -26,8 +26,6 @@ contract Crowdsale {
     uint public amountRaised;
 
     uint public contractRemains;
-
-    uint[] public contractFulfilmentIndex;
 
     Detail[] public contractFulfilmentRecord;
 
@@ -84,6 +82,7 @@ contract Crowdsale {
         }
         return keyIndex;
     }
+/*---------------------------------------------Public methods---------------------------------------------------------*/
 
     function getTokensCount() constant returns (uint) {
         return tokensAccumulated.length;
@@ -113,9 +112,11 @@ contract Crowdsale {
 
 /* The function without name is the default function that is called whenever anyone sends funds to a contract */
     function receiveApproval(address _from, uint _value, address _token, bytes _extraData) returns (bool) {
+    /* If goal is not reached then - donate */
         if (!fundingGoalReached) {
             return donate(_from, _value, _token);
         }
+        /* If goal is reached then - exchange all collected tokens into one token*/
         else if (fundingGoalReached && tokensToConvertInto == _token) {
             if (contractRemains == _value) {
                 return exchange(_from, _value, _token);
@@ -124,54 +125,10 @@ contract Crowdsale {
                 return false;
             }
         }
-    }
-
-    function donate(address _from, uint _value, address _token) private returns (bool){
-        if (!isTokenAccumulated(_token)) return false;
-        address _to = this;
-        if (!Token(_token).transferFrom(_from, _to, _value)) {
-            return false;
-        }
-        if (balanceOf[_from][_token] == uint(0x0)) {
-            balanceOf[_from][_token] = _value;
-            donators.push(_from);
-        }
         else {
-            balanceOf[_from][_token] += _value;
-        }
-        tokenAmounts[_token] += _value;
-        amountRaised += _value;
-        FundTransfer(_from, _token, _value, true);
-        return true;
-    }
-
-    function exchange(address _from, uint _value, address _token) private returns (bool) {
-        uint keyIndex;
-        address token;
-        uint amount;
-        keyIndex = 0;
-        while (keyIndex < tokensAccumulated.length) {
-            if (tokensAccumulated[keyIndex] != address(0x0)) {
-                token = tokensAccumulated[keyIndex];
-                amount = tokenAmounts[token];
-                if (Token(token).transfer(foundation, amount)) {
-                    FundTransfer(foundation, tokensAccumulated[keyIndex], amount, false);
-                    delete tokenAmounts[token];
-                }
-                else {
-                    throw;
-                // Hopefully throw will roll back anything we sent to the blockchain so far
-                }
-            }
-            keyIndex++;
-        }
-        address _to = this;
-        if (!Token(_token).transferFrom(_from, _to, _value)) {
             return false;
         }
-        return true;
     }
-
 
 /* checks if the goal or time limit has been reached and ends the campaign */
     function checkGoalReached() returns (bool) {
@@ -227,11 +184,69 @@ contract Crowdsale {
             }
             return true;
         }
-    /* if funding goal is reached then foundation can withdraw everything */
+    /* if funding goal is reached - save amount of collected coins */
         if (fundingGoalReached) {
             contractRemains = amountRaised;
+            return true;
         }
         return false;
     }
 
+    function withdraw(uint amount, uint id, string note) returns (uint) {
+        contractRemains -= amount;
+        return contractFulfilmentRecord.push(Detail(amount, id, note));
+    }
+
+    function getContractFulfilmentRecordLength() constant returns (uint){
+        return contractFulfilmentRecord.length;
+    }
+
+/*-----------------------------------------Private methods------------------------------------------------------------*/
+    function donate(address _from, uint _value, address _token) private returns (bool){
+        if (!isTokenAccumulated(_token)) return false;
+        address _to = this;
+        if (!Token(_token).transferFrom(_from, _to, _value)) {
+            return false;
+        }
+        if (balanceOf[_from][_token] == uint(0x0)) {
+            balanceOf[_from][_token] = _value;
+            donators.push(_from);
+        }
+        else {
+            balanceOf[_from][_token] += _value;
+        }
+        tokenAmounts[_token] += _value;
+        amountRaised += _value;
+        FundTransfer(_from, _token, _value, true);
+        return true;
+    }
+
+    function exchange(address _from, uint _value, address _token) private returns (bool) {
+        uint keyIndex;
+        address token;
+        uint amount;
+        keyIndex = 0;
+        address _to = this;
+    /* Transfer coins to this contract*/
+        if (!Token(_token).transferFrom(_from, _to, _value)) {
+            return false;
+        }
+    /* Transfer all kind of coins to foundation*/
+        while (keyIndex < tokensAccumulated.length) {
+            if (tokensAccumulated[keyIndex] != address(0x0)) {
+                token = tokensAccumulated[keyIndex];
+                amount = tokenAmounts[token];
+                if (Token(token).transfer(foundation, amount)) {
+                    FundTransfer(foundation, tokensAccumulated[keyIndex], amount, false);
+                    delete tokenAmounts[token];
+                }
+                else {
+                    throw;
+                // Hopefully throw will roll back anything we sent to the blockchain so far
+                }
+            }
+            keyIndex++;
+        }
+        return true;
+    }
 }
