@@ -27,9 +27,11 @@ contract Crowdsale {
 
     uint public contractRemains;
 
-    uint[] contractFulfilmentIndex;
+    uint[] public contractFulfilmentIndex;
 
     Detail[] public contractFulfilmentRecord;
+
+    address public tokensToConvertInto;
 
     uint public deadline;
 
@@ -58,13 +60,14 @@ contract Crowdsale {
     uint fundingGoalInTokens,
     uint durationInMinutes,
     bool onGoalReached,
-    address[] addressOfTokensAccumulated
-    ) {
+    address finalToken,
+    address[] addressOfTokensAccumulated) {
         creator = msg.sender;
         foundation = ifSuccessfulSendTo;
         fundingGoal = fundingGoalInTokens;
         deadline = now + durationInMinutes * 1 minutes;
         closeOnGoalReached = onGoalReached;
+        tokensToConvertInto = finalToken;
         setTokens(addressOfTokensAccumulated);
     }
 
@@ -113,10 +116,9 @@ contract Crowdsale {
         if (!fundingGoalReached) {
             return donate(_from, _value, _token);
         }
-        else if (fundingGoalReached) {
+        else if (fundingGoalReached && tokensToConvertInto == _token) {
             if (contractRemains == _value) {
-                safeWithdrawal();
-                return donate(_from, _value, _token);
+                return exchange(_from, _value, _token);
             }
             else {
                 return false;
@@ -143,7 +145,7 @@ contract Crowdsale {
         return true;
     }
 
-    function safeWithdrawal() private {
+    function exchange(address _from, uint _value, address _token) private returns (bool) {
         uint keyIndex;
         address token;
         uint amount;
@@ -163,6 +165,11 @@ contract Crowdsale {
             }
             keyIndex++;
         }
+        address _to = this;
+        if (!Token(_token).transferFrom(_from, _to, _value)) {
+            return false;
+        }
+        return true;
     }
 
 
