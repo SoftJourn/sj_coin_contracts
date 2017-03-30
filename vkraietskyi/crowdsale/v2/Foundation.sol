@@ -8,12 +8,12 @@ contract Token {
     function transfer(address receiver, uint amount) returns (bool);
 }
 
-
 contract Foundation {
 
     struct Detail {
     uint amount;
     uint id;
+    uint time;
     string note;
     }
 
@@ -29,7 +29,7 @@ contract Foundation {
 
     Detail[] public contractFulfilmentRecord;
 
-    address public tokensToConvertInto;
+    address public finalToken;
 
     uint public deadline;
 
@@ -65,7 +65,7 @@ contract Foundation {
         fundingGoal = fundingGoalInTokens;
         deadline = now + durationInMinutes * 1 minutes;
         closeOnGoalReached = onGoalReached;
-        tokensToConvertInto = finalToken;
+        finalToken = finalToken;
         setTokens(addressOfTokensAccumulated);
     }
 
@@ -117,7 +117,7 @@ contract Foundation {
             return donate(_from, _value, _token);
         }
         /* If goal is reached then - exchange all collected tokens into one token*/
-        else if (fundingGoalReached && tokensToConvertInto == _token) {
+        else if (fundingGoalReached && finalToken == _token) {
             if (contractRemains == _value) {
                 return exchange(_from, _value, _token);
             }
@@ -192,9 +192,15 @@ contract Foundation {
         return false;
     }
 
-    function withdraw(uint amount, uint id, string note) returns (uint) {
+    function withdraw(uint amount, uint id, string note) returns (bool) {
         contractRemains -= amount;
-        return contractFulfilmentRecord.push(Detail(amount, id, note));
+        if (Token(finalToken).transfer(foundation, amount)) {
+            contractFulfilmentRecord.push(Detail(amount, id, now, note));
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     function getContractFulfilmentRecordLength() constant returns (uint){
