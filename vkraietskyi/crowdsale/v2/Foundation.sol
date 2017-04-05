@@ -8,6 +8,7 @@ contract Token {
     function transfer(address receiver, uint amount) returns (bool);
 }
 
+
 contract Foundation {
 
     struct Detail {
@@ -17,34 +18,48 @@ contract Foundation {
     string note;
     }
 
+/*Contract's founder address*/
     address public foundation;
 
+/*Contract's creator address*/
     address public creator;
 
+/*Amount of coins to collect*/
     uint public fundingGoal;
-
+/*Amount of coins which were collected before contract has been closed*/
     uint public amountRaised;
 
+/*Amount of coins which were collected after contract has been closed*/
     uint public contractRemains;
 
+/*Details about contract performance*/
     Detail[] public contractFulfilmentRecord;
 
-    address public finalToken;
+/*Token address into which should be exchanged all other tokens*/
+    address public mainToken;
 
+/*Contract's deadline(timestamp)*/
     uint public deadline;
 
+/*Condition of contract closing*/
     bool public closeOnGoalReached;
 
+/*Array of token addresses which are allowed for contract*/
     address[] public tokensAccumulated;
 
+/*Array of account addresses of donators*/
     address[] public donators;
 
+/*Status of contract*/
     bool fundingGoalReached = false;
 
+/*Is contract closed*/
     bool crowdsaleClosed = false;
 
+/*Map that contains amount of coins which depend on token address and donator address*/
     mapping (address => mapping (address => uint)) public balanceOf;
 
+/*Map that contains amount of coins which depend on token address*/
     mapping (address => uint) public tokenAmounts;
 
     event GoalReached(address foundation, uint amountRaised);
@@ -65,7 +80,7 @@ contract Foundation {
         fundingGoal = fundingGoalInTokens;
         deadline = now + durationInMinutes * 1 minutes;
         closeOnGoalReached = onGoalReached;
-        finalToken = finalToken;
+        mainToken = finalToken;
         setTokens(addressOfTokensAccumulated);
     }
 
@@ -84,10 +99,12 @@ contract Foundation {
     }
 /*---------------------------------------------Public methods---------------------------------------------------------*/
 
+/*Method returns count of tokens that are allowed in contract*/
     function getTokensCount() constant returns (uint) {
         return tokensAccumulated.length;
     }
 
+/*Method shows is token allowed to be used in contract*/
     function isTokenAccumulated(address _token) constant returns (bool) {
         if (crowdsaleClosed) return false;
         uint keyIndex = 0;
@@ -114,10 +131,16 @@ contract Foundation {
     function receiveApproval(address _from, uint _value, address _token, bytes _extraData) returns (bool) {
     /* If goal is not reached then - donate */
         if (!fundingGoalReached) {
-            return donate(_from, _value, _token);
+        /* If it is not too late */
+            if (now <= deadline) {
+                return donate(_from, _value, _token);
+            }
+            else {
+                return false;
+            }
         }
         /* If goal is reached then - exchange all collected tokens into one token*/
-        else if (fundingGoalReached && finalToken == _token) {
+        else if (fundingGoalReached && mainToken == _token) {
             if (contractRemains == _value) {
                 return exchange(_from, _value, _token);
             }
@@ -147,6 +170,7 @@ contract Foundation {
         return crowdsaleClosed;
     }
 
+/*Method closes contract depends on conditions*/
     function close() returns (bool) {
     /* Do not allow to withdraw anything util crowdsale is closed */
         if (!checkGoalReached()) return false;
@@ -192,22 +216,35 @@ contract Foundation {
         return false;
     }
 
+/*Method withdraws coins back to foundation and records this withdrawal*/
     function withdraw(uint amount, uint id, string note) returns (bool) {
-        contractRemains -= amount;
-        if (Token(finalToken).transfer(foundation, amount)) {
-            contractFulfilmentRecord.push(Detail(amount, id, now, note));
-            return true;
+        if (amount <= contractRemains && !(amount > contractRemains)) {
+            if (Token(mainToken).transfer(foundation, amount)) {
+                contractRemains -= amount;
+                contractFulfilmentRecord.push(Detail(amount, id, now, note));
+                return true;
+            }
+            else {
+                return false;
+            }
         }
         else {
             return false;
         }
     }
-
+/*Method returns count of withdrawal records*/
     function getContractFulfilmentRecordLength() constant returns (uint){
         return contractFulfilmentRecord.length;
     }
 
+/*Method returns withdrawal record*/
+    function getContractFulfilmentRecord(uint index) constant returns (uint, uint, uint, string){
+        var data = contractFulfilmentRecord[index];
+        return (data.amount, data.id, data.time, data.note);
+    }
+
 /*-----------------------------------------Private methods------------------------------------------------------------*/
+/*Method transfers coins from account to contract*/
     function donate(address _from, uint _value, address _token) private returns (bool){
         if (!isTokenAccumulated(_token)) return false;
         address _to = this;
@@ -227,6 +264,7 @@ contract Foundation {
         return true;
     }
 
+/*Method takes amount of mainTokens and transfer back amount of all other tokens*/
     function exchange(address _from, uint _value, address _token) private returns (bool) {
         uint keyIndex;
         address token;
