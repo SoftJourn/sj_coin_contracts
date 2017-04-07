@@ -30,7 +30,7 @@ contract Foundation {
     uint public amountRaised;
 
 /*Amount of coins which were collected after contract has been closed*/
-    uint public contractRemains;
+    uint public contractRemains = uint(0x0);
 
 /*Details about contract performance*/
     Detail[] public contractFulfilmentRecord;
@@ -218,7 +218,7 @@ contract Foundation {
 
 /*Method withdraws coins back to foundation and records this withdrawal*/
     function withdraw(uint amount, uint id, string note) returns (bool) {
-        if (amount <= contractRemains && !(amount > contractRemains)) {
+        if (amount <= contractRemains && !(amount > contractRemains) && contractRemains != uint(0x0)) {
             if (Token(mainToken).transfer(foundation, amount)) {
                 contractRemains -= amount;
                 contractFulfilmentRecord.push(Detail(amount, id, now, note));

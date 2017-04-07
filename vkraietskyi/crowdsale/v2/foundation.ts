@@ -200,10 +200,37 @@ async function donateAfterDeadline() {
     await Print.printVSSeparator("Donate to foundation using second2 coin result: " + lateDonate);
 }
 
+async function withdrawalBeforeContractWasClosed() {
+    console.log("WITHDRAWAL BEFORE CONTRACT WAS CLOSED TEST");
+    // deploy coins contract
+    let coinContract = await newCoin(contractData[0], 1);
+    Print.print("Coins contracts have been deployed successful");
+    // preparing parameters for foundation contract
+    let foundation = accountData.sjcoins_full_000.address;
+    let totalToCollect = 200;
+    let lifeTime = 1; // 1 minute
+    let closeOnGoalReached = true;
+    let finalToken = coinContract.address;
+    // deploy foundation contract
+    let foundationContract = await newFoundation(contractData[1], foundation, totalToCollect, lifeTime, closeOnGoalReached, finalToken, [coinContract.address]);
+    await Print.printVSSeparator("Foundation contract have been deployed successful");
+    // print contract variables to be sure that all was deployed fine
+    await Print.printValueOf(foundationContract, "foundation", "Foundation account address:", "string");
+    await Print.printValueOf(foundationContract, "fundingGoal", "Foundation coins to collect:", "number");
+    await Print.printValueOf(foundationContract, "deadline", "Foundation contract's deadline:", "date");
+    await Print.printValueOf(foundationContract, "closeOnGoalReached", "Foundation close on goal reached condition", "bool");
+    await Print.printValueOf(foundationContract, "mainToken", "Foundation main coin", "string");
+    await Print.printValueOf(foundationContract, "getTokens", "Foundation allowed coins", "string");
+    // print balances
+    await Print.printVSSeparator("Withdraw before contract was closed");
+    let withdrawResult = await withdraw(foundationContract, 400, 1, "Brought 400 coins");
+    assert.equal(false, withdrawResult);
+}
 
 function main() {
     // normalFlow();
-    donateAfterDeadline();
+    // donateAfterDeadline();
+    withdrawalBeforeContractWasClosed();
 }
 
 main();
