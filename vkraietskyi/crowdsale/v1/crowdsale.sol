@@ -100,10 +100,6 @@ contract Crowdsale {
     return true;
   }
 
-  function getNow() returns (uint){
-    return now;
-  }
-
   /* checks if the goal or time limit has been reached and ends the campaign */
   function checkGoalReached() returns (bool) {
     if (now >= deadline || closeOnGoalReached) {
@@ -114,14 +110,17 @@ contract Crowdsale {
       if (now >= deadline) {
         crowdsaleClosed = true;
       }
+      if (fundingGoalReached) {
+        crowdsaleClosed = true;
+      }
     }
     return crowdsaleClosed;
   }
 
-  function safeWithdrawal() returns (uint) {
+  function safeWithdrawal() returns (bool) {
     /* Do not allow to withdraw anything util crowdsale is closed */
-    if (!checkGoalReached()) return 0;
-    if (msg.sender != creator) return 1;
+    if (!checkGoalReached()) return false;
+    if (msg.sender != creator) return false;
     uint keyIndex;
     uint donatorsIndex;
     address donator;
@@ -152,7 +151,7 @@ contract Crowdsale {
         }
         donatorsIndex++;
       }
-      return 2;
+      return true;
     }
     /* if funding goal is reached then beneficiary can withdraw everything */
     if (fundingGoalReached) {
@@ -171,8 +170,8 @@ contract Crowdsale {
         }
         keyIndex++;
       }
-      return 3;
+      return true;
     }
-    return 4;
+    return false;
   }
 }

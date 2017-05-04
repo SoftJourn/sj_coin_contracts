@@ -1,0 +1,23 @@
+{
+  "name": "v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/foundation.js",
+  "dependencies": {
+    "eris-contracts": "^0.15.12",
+    "rxjs": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.12",
+    "nodemon": "^1.11.0",
+    "ts-node": "^3.0.2",
+    "typescript": "^2.2.2"
+  },
+  "scripts": {
+    "start": "npm run build:live",
+    "build:live": "nodemon --exec ./node_modules/.bin/ts-node -- ./foundation.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
