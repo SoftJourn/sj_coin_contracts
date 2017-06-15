@@ -12,9 +12,8 @@ var erisC = require('@monax/legacy-contracts');
 var erisdbURL = "http://localhost:1337/rpc";
 
 // get the abi and deployed data squared away
-var contractData = require('./jobs_output.json');
-var idisContractAddress = contractData["deployStorageK"];
-var idisAbi = JSON.parse(fs.readFileSync("./abi/" + idisContractAddress));
+var idisContractAddress = "8745C5D9611F960251890A0C692C2E2E4E9A5D52";
+var idisAbi = JSON.parse(fs.readFileSync("./abi/IdisContractsFTW.abi", 'utf8'));
 
 // properly instantiate the contract objects manager using the erisdb URL
 // and the account data (which is a temporary hack)
@@ -29,7 +28,8 @@ var idisContract = contractsManager.newContractFactory(idisAbi).at(idisContractA
 function getValue(callback) {
   idisContract.get(function(error, result){
     if (error) { throw error }
-    console.log("Idi's number is:\t\t\t" + result.toNumber());
+    console.log("Idi's number is:\t\t\t");
+    console.log(result);
     callback();
   });
 }
@@ -41,6 +41,7 @@ function changeValue() {
   prompt.start();
   prompt.get(['value'], function (error, result) {
     if (error) { throw error }
+    console.log(result.value);
     setValue(result.value)
   });
 }

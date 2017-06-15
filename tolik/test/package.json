@@ -1,5 +1,5 @@
 {
-  "name": "idis_app",
+  "name": "test_app",
   "version": "0.0.1",
   "dependencies": {
     "@monax/legacy-db": "^0.16.4",
