@@ -24,16 +24,15 @@ const myCode = fs.readFileSync("./MyContract.bin", 'utf8');
 // Create a factory (or contract template) from 'myJsonAbi' 
 var myContractFactory = contractManager.newContractFactory(myJsonAbi);
 
-var address = "A4609A127F40EFA9656B20637B21F1E6A72B2F3E";
+var address = "40AC35CFDE36E818F1463DED3D5D0B56A237A1E7";
 var myContract = myContractFactory.at(address);
 
 var res;
  
 try{
-    res = myContract.add(3, 2, function (error,result){
+    myContract.add(3, 2, function (error,result){
         if (error) throw error;
-        console.log(result);
-        console.log(res);
+        console.log(result.toNumber());
     });
 } catch (error) {
     console.log(error);

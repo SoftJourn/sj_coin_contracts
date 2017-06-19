@@ -1,0 +1,8 @@
+jobs:
+
+- name: deployMyContract
+  job:
+    deploy:
+      contract: MyContract.sol
+
+
