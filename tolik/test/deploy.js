@@ -25,8 +25,8 @@ const myCode = fs.readFileSync("./MyContract.bin", 'utf8');
 var myContractFactory = contractManager.newContractFactory(myJsonAbi);
 
 var myContract;
- 
-myContractFactory.new(myCode, function(error, contract){
+
+myContractFactory.new({data: myCode.trim()}, function(error, contract){
     if(error) {throw error}
     myContract = contract;
     console.log(contract);

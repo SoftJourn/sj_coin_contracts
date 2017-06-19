@@ -24,7 +24,7 @@ const myCode = fs.readFileSync("./MyContract.bin", 'utf8');
 // Create a factory (or contract template) from 'myJsonAbi' 
 var myContractFactory = contractManager.newContractFactory(myJsonAbi);
 
-var address = "40AC35CFDE36E818F1463DED3D5D0B56A237A1E7";
+var address = "A019878F1CC0B94F5FE34EAB45038344D3FE7187";
 var myContract = myContractFactory.at(address);
 
 var res;
