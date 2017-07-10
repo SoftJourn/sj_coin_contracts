@@ -13,7 +13,7 @@ Vagrant.configure("2") do |config|
     cl0.vm.network "forwarded_port", guest: 22, host: 1033
     cl0.vm.network "private_network", ip: "192.168.33.10"
     #cl0.vm.network "public_network"
-    # cl0.vm.synced_folder "./cl0", "/vagrant_data"
+    cl0.vm.synced_folder "./CL0", "/home/ubuntu"
     # cl0.vm.provider "virtualbox" do |vb|
     #   # Display the VirtualBox GUI when booting the machine
     #   vb.gui = true
@@ -23,10 +23,15 @@ Vagrant.configure("2") do |config|
     # end
     cl0.ssh.username = "ubuntu"
     cl0.ssh.password = "221c36362c947c7882bd3db1"
-    # cl0.vm.provision "shell", inline: <<-SHELL
-    #   apt-get update
-    #   apt-get install -y apache2
-    # SHELL
+    cl0.vm.provision "shell", inline: <<-SHELL
+      curl -L https://pkgs.monax.io/dl/monax-0.17.0-linux-amd64 2>/dev/null | sudo tee /usr/local/bin/monax > /dev/null
+      sudo chmod +x /usr/local/bin/monax
+      sudo apt-get install -y docker-compose
+      sudo systemctl enable docker
+      sudo usermod -a -G docker ubuntu
+      newgrp - docker
+      MONAX_PULL_APPROVE=true sudo -i -E -u ubuntu monax init
+     SHELL
   end
 
   config.vm.define "cl1" do |cl1|
@@ -35,8 +40,18 @@ Vagrant.configure("2") do |config|
     cl1.vm.network "forwarded_port", guest: 22, host: 1133
     cl1.vm.network "private_network", ip: "192.168.33.11"
     #cl1.vm.network "public_network"
+    cl1.vm.synced_folder "./CL1", "/home/ubuntu"
     cl1.ssh.username = "ubuntu"
     cl1.ssh.password = "221c36362c947c7882bd3db1"
+    cl1.vm.provision "shell", inline: <<-SHELL
+      curl -L https://pkgs.monax.io/dl/monax-0.17.0-linux-amd64 2>/dev/null | sudo tee /usr/local/bin/monax > /dev/null
+      sudo chmod +x /usr/local/bin/monax
+      sudo apt-get install -y docker-compose
+      sudo systemctl enable docker
+      sudo usermod -a -G docker ubuntu
+      newgrp - docker
+      MONAX_PULL_APPROVE=true sudo -i -E -u ubuntu monax init
+     SHELL
   end
 
   config.vm.define "cl2" do |cl2|
@@ -45,8 +60,18 @@ Vagrant.configure("2") do |config|
     cl2.vm.network "forwarded_port", guest: 22, host: 1233
     cl2.vm.network "private_network", ip: "192.168.33.12"
     #cl2.vm.network "public_network"
+    cl2.vm.synced_folder "./CL2", "/home/ubuntu"
     cl2.ssh.username = "ubuntu"
     cl2.ssh.password = "221c36362c947c7882bd3db1"
+    cl2.vm.provision "shell", inline: <<-SHELL
+      curl -L https://pkgs.monax.io/dl/monax-0.17.0-linux-amd64 2>/dev/null | sudo tee /usr/local/bin/monax > /dev/null
+      sudo chmod +x /usr/local/bin/monax
+      sudo apt-get install -y docker-compose
+      sudo systemctl enable docker
+      sudo usermod -a -G docker ubuntu
+      newgrp - docker
+      MONAX_PULL_APPROVE=true sudo -i -E -u ubuntu monax init
+     SHELL
   end
 
   config.vm.define "cl3" do |cl3|
@@ -54,9 +79,19 @@ Vagrant.configure("2") do |config|
     cl3.vm.hostname = "CL3"
     cl3.vm.network "forwarded_port", guest: 22, host: 1333
     cl3.vm.network "private_network", ip: "192.168.33.13"
+    cl3.vm.synced_folder "./CL3", "/home/ubuntu"
     #cl3.vm.network "public_network"
     cl3.ssh.username = "ubuntu"
     cl3.ssh.password = "221c36362c947c7882bd3db1"
+    cl3.vm.provision "shell", inline: <<-SHELL
+      curl -L https://pkgs.monax.io/dl/monax-0.17.0-linux-amd64 2>/dev/null | sudo tee /usr/local/bin/monax > /dev/null
+      sudo chmod +x /usr/local/bin/monax
+      sudo apt-get install -y docker-compose
+      sudo systemctl enable docker
+      sudo usermod -a -G docker ubuntu
+      newgrp - docker
+      MONAX_PULL_APPROVE=true sudo -i -E -u ubuntu monax init
+     SHELL
   end
 
 end
