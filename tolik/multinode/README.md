@@ -100,8 +100,8 @@ Vagrantfile will create 4 blockchain nodes & bootstrap monax:
 - On CL0 (get address & deploy):
 
 ```shell
-  mkdir ~/.monax/apps/GSFactory && ~/.monax/apps/GSFactory
-  culr -O https://raw.githubusercontent.com/SoftJourn/sj_coin_contracts/master/tolik/multinode/GSFactory/GSFactory.sol
+  mkdir ~/.monax/apps/GSFactory && cd ~/.monax/apps/GSFactory
+  curl -O https://raw.githubusercontent.com/SoftJourn/sj_coin_contracts/master/tolik/multinode/GSFactory/GSFactory.sol
   curl -O https://raw.githubusercontent.com/SoftJourn/sj_coin_contracts/master/tolik/multinode/GSFactory/epm.yaml
   cat ~/.monax/chains/multichain/accounts.json |grep "address"|head -n 1|cut -d '"' -f 4
   50297D60ADFDE7E04C4AA454A059366051EB86A8
@@ -109,6 +109,15 @@ Vagrantfile will create 4 blockchain nodes & bootstrap monax:
 ```
 
 ### Node.js app
+
+```shell
+  cd ~/.monax/apps/GSFactory
+  curl --remote-name-all https://raw.githubusercontent.com/SoftJourn/sj_coin_contracts/master/tolik/multinode/GSFactory/{app,get,get_addr}.js
+  curl -O https://raw.githubusercontent.com/SoftJourn/sj_coin_contracts/master/tolik/multinode/GSFactory/package.json
+  npm install
+```
+
+Get `accounts.json` & `job_soutput.json` from `CL0`, then you can use 
 
 - `GSFactory/app.js` - sets/gets the number with GSContract
 - `GSFactory/get.js` - gets the number with GSContract
