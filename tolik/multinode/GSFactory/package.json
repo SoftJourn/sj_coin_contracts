@@ -1,0 +1,9 @@
+{
+  "name": "gsfactory_app",
+  "version": "0.0.1",
+  "dependencies": {
+    "@monax/legacy-db": "^0.16.4",
+    "@monax/legacy-contracts": "^0.16.8",
+    "prompt": "*"
+  }
+}
