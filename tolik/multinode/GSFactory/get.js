@@ -8,7 +8,7 @@ var contracts = require('@monax/legacy-contracts');
 var burrowModule = require("@monax/legacy-db");
  
 // Create a new instance of Burrow that uses the given URL. 
-var burrow = burrowModule.createInstance("http://192.168.33.10:1337/rpc");
+var burrow = burrowModule.createInstance("http://192.168.33.13:1337/rpc");
 // The private key. 
 var accountData = require('./accounts.json');
  
