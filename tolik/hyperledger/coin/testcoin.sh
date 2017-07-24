@@ -1,0 +1,1 @@
+/Users/acidumirae/Hyperledger/fabric-samples/balance-transfer/testcoin.sh
