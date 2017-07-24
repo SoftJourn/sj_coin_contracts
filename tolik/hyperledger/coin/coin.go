@@ -1,0 +1,1 @@
+/Users/acidumirae/Hyperledger/fabric-samples/balance-transfer/artifacts/src/github.com/coin/coin.go
