@@ -33,49 +33,6 @@ ORG1_TOKEN=$(echo $ORG1_TOKEN | jq ".token" | sed "s/\"//g")
 echo
 echo "ORG1 token is $ORG1_TOKEN"
 echo
-#echo
-#echo "POST Join Channel request"
-#echo
-#curl -s -X POST \
-#  http://localhost:4000/channels/mychannel/peers \
-#  -H "authorization: Bearer $ORG1_TOKEN" \
-#  -H "content-type: application/json" \
-#  -d '{
-#	"peers": ["localhost:7051","localhost:7056"]
-#}'
-#echo
-#echo
-
-echo "POST Install chaincode"
-echo
-curl -s -X POST \
-  http://localhost:4000/chaincodes \
-  -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051","localhost:7056"],
-	"chaincodeName":"coin'$1'",
-	"chaincodePath":"github.com/coin",
-	"chaincodeVersion":"v0"
-}'
-echo
-echo
-
-echo "POST Instantiate chaincode"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes \
-  -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051"],
-	"chaincodeName":"coin'$1'",
-	"chaincodeVersion":"v0",
-	"functionName":"init",
-	"args":["'$1'","'$2'"]
-}'
-echo
-echo
 
 echo "POST Invoke request"
 echo
@@ -174,6 +131,7 @@ curl -s -X POST \
 }'
 echo
 echo
+
 
 echo "POST Invoke request"
 echo
