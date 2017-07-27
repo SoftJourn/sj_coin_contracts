@@ -30,14 +30,15 @@ package main
  */
 import (
 	//"bytes"
-	//"encoding/json"
     "encoding/hex"
+	//"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
 
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/common/util"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
 )
@@ -227,7 +228,7 @@ func (s *CoinSmartContract) mint(APIstub shim.ChaincodeStubInterface, args []str
 
 func (s *CoinSmartContract) transfer(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
     logger.Info("########### coin transfer ###########")
-    if len(args) != 2 {
+    if len(args) < 2 {
     	return shim.Error("Incorrect number of arguments. Expecting 2")
     }
     amount, err := strconv.Atoi(args[0])
@@ -260,8 +261,51 @@ func (s *CoinSmartContract) transfer(APIstub shim.ChaincodeStubInterface, args [
     return shim.Success([]byte{0x00})
 }
 
-func (t *CoinSmartContract) transferFrom(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *CoinSmartContract) transferFrom(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
     logger.Info("########### coin transferFrom ###########")
+    if len(args) != 3 {
+    	return shim.Error("Incorrect number of arguments. Expecting 3")
+    }
+ 	from, err := s.getAccountBytes(args[0])
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+ 	to, err := s.getAccountBytes(args[1])
+	if err != nil {
+		return shim.Error(err.Error())
+	}	
+    amount, err := strconv.Atoi(args[3])
+	if err != nil {
+		return shim.Error("Expecting integer value for transfer amount")
+	}
+    allowedBytes, err := s.getAllowance(APIstub, from, msgSender)
+    if err != nil {
+    	return shim.Error(err.Error())
+    }
+    balanceBytes, err := s.getBalance(APIstub, from)
+    if err != nil {
+    	logger.Info(err.Error())
+    }    
+	allowed, err := strconv.Atoi(string(allowedBytes))
+	if err != nil {
+		return shim.Error("Expecting integer value for allowance")
+	}
+	balance, err := strconv.Atoi(string(balanceBytes))
+	if err != nil {
+		return shim.Error("Expecting integer value for balance")
+	}
+    if balance<amount || allowed<amount || amount<1 {
+    	return shim.Error("Insufficient balance and/or allowance")
+    }
+    result := s.addBalance(APIstub, -amount, from)
+    if !reflect.DeepEqual(result, shim.Success([]byte{0x00})) {
+        return shim.Error("Failed to transfer coins from sender");
+    }
+    result = s.addBalance(APIstub, amount, to)
+    if !reflect.DeepEqual(result, shim.Success([]byte{0x00})) {
+    	result = s.addBalance(APIstub, amount, from)
+        return shim.Error("Failed to transfer coins to receiver");
+    }    
     return shim.Success([]byte{0x00})
 }
 
@@ -285,7 +329,7 @@ func (s *CoinSmartContract) balanceOf(APIstub shim.ChaincodeStubInterface, args 
 func (s *CoinSmartContract) approve(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
     logger.Info("########### coin approve ###########")
     var indexName, approveKey string
-    if len(args) != 2 {
+    if len(args) < 2 {
     	return shim.Error("Incorrect number of arguments. Expecting 2")
     }
     Aval, err := strconv.Atoi(args[0])
@@ -312,13 +356,37 @@ func (s *CoinSmartContract) approve(APIstub shim.ChaincodeStubInterface, args []
 }
 
 func (s *CoinSmartContract) approveAndCall(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+	var channelName string
     logger.Info("########### coin approveAndCall ###########")
-    return shim.Success([]byte{0x00})
+    result := s.approve(APIstub, args)
+    if !reflect.DeepEqual(result, shim.Success([]byte{0x00})) {
+        // Failure
+        return result;
+    }
+    amount, err := strconv.Atoi(args[0])
+	if err != nil {
+		return shim.Error("Expecting integer value for approve amount")
+	}    
+    chaincodeName := args[3]
+	if len(args) > 3 {
+		channelName = args[4]
+	} else {
+		channelName = ""
+	}    
+	f := "receiveApproval"
+	// TODO: IDENTIFY CHAINCODE! SO WE KNOW WHO TO CALL BACK!!!
+	queryArgs := util.ToChaincodeArgs(f, hex.EncodeToString(msgSender), string(amount), "coin")
+	response := APIstub.InvokeChaincode(chaincodeName, queryArgs, channelName)
+	if response.Status != shim.OK {
+		errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", response.Payload)
+		logger.Info(errStr)
+		return shim.Error(errStr)
+	}
+    return response
 }
 
 func (s *CoinSmartContract) allowance(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
     logger.Info("########### coin allowance ###########")
-    var indexName, approveKey string
     if len(args) != 1 {
     	return shim.Error("Incorrect number of arguments. Expecting 1")
     }
@@ -326,26 +394,70 @@ func (s *CoinSmartContract) allowance(APIstub shim.ChaincodeStubInterface, args 
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	logger.Infof("  Approve sender key: %x", msgSender)
-	logger.Infof(" Approve spender key: %x", user)
+    allowed, err := s.getAllowance(APIstub, msgSender, user)
+    if err != nil {
+    	return shim.Error(err.Error())
+    }
+    return shim.Success(allowed)
+}
+
+// Currently this crashes on the node.js app!
+func (s *CoinSmartContract) distribute(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+    logger.Info("########### coin distribute ###########")
+    if len(args) < 3 {
+    	return shim.Error("Incorrect number of arguments. Expecting at least 3")
+    }
+    Aval, err := strconv.Atoi(args[0])
+	if err != nil {
+		return shim.Error("Expecting integer value for distribute amount")
+	}
+    balance, err := s.getBalance(APIstub, msgSender)
+    if err != nil {
+    	logger.Info(err.Error())
+    }
+    logger.Infof("Balance[%x] = %d", msgSender, balance)
+    if balance < Aval {
+    	return shim.Error("Insufficient coins to distribute")
+    }
+    n := len(args)
+    if Aval/n < 1 {
+    	return shim.Error("To few coins to distribute")
+    }
+    args[0] = strconv.Itoa(Aval / n)
+    for i := 1; i < n; i++ {
+    	if i > 1 {
+    		args[1] = args[i]
+    	}
+        result := s.transfer(APIstub, args)
+        if reflect.DeepEqual(result, shim.Success([]byte{0x00})) {
+            // Sucess
+        } else {
+        	// Failure
+        	logger.Infof("Failed to send %s from %x to %x", args[0], msgSender, args[1])
+        }
+    }
+    return shim.Success([]byte{0x00})
+}
+
+/******************************************************************************************/
+
+func (s *CoinSmartContract) getAllowance(APIstub shim.ChaincodeStubInterface, sender []byte, spender []byte) ([]byte, error) {
+    var indexName, approveKey string
+    var err error
+	logger.Infof("  Approve sender key: %x", sender)
+	logger.Infof(" Approve spender key: %x", spender)
  	indexName = "name~sender~spender~"
-	approveKey, err = APIstub.CreateCompositeKey(indexName, []string{hex.EncodeToString(msgSender), "~", hex.EncodeToString(user)})
+	approveKey, err = APIstub.CreateCompositeKey(indexName, []string{hex.EncodeToString(sender), "~", hex.EncodeToString(spender)})
 	if err != nil {
 		logger.Info("Failed to create composite key")
-		return shim.Error(err.Error())
+		return nil, err
 	}
 	logger.Infof("   Approve index key: %s", approveKey) 
 	approveAsBytes, err := APIstub.GetState(approveKey)
     if err != nil {
-        return shim.Error(err.Error())
+        return nil, err
     }  
-    // TODO: Do we want to convert?
-    return shim.Success(approveAsBytes)
-}
-
-func (t *CoinSmartContract) distribute(stub shim.ChaincodeStubInterface, args []string) sc.Response {
-    logger.Info("########### coin distribute ###########")
-    return shim.Success([]byte{0x00})
+    return approveAsBytes, nil
 }
 
 func (s *CoinSmartContract) getAccountBytes(accountText string) ([]byte, error) {
@@ -424,36 +536,6 @@ func (s *CoinSmartContract) hashCreator(APIstub shim.ChaincodeStubInterface) ([]
     //logger.Infof("%x", Creatorhash)
     //logger.Info("********************************************************************************")
     return Creatorhash, nil
-}
-
-// Set stores the asset (both key and value) on the ledger. If the key exists,
-// it will override the value with the new one
-func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
-	if len(args) != 2 {
-		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
-	}
-
-	err := stub.PutState(args[0], []byte(args[1]))
-	if err != nil {
-		return "", fmt.Errorf("Failed to set asset: %s", args[0])
-	}
-	return args[1], nil
-}
-
-// Get returns the value of the specified asset key
-func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
-	if len(args) != 1 {
-		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
-	}
-
-	value, err := stub.GetState(args[0])
-	if err != nil {
-		return "", fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
-	}
-	if value == nil {
-		return "", fmt.Errorf("Asset not found: %s", args[0])
-	}
-	return string(value), nil
 }
 
 // The main function is only relevant in unit test mode. Only included here for completeness.

@@ -89,37 +89,9 @@ curl -s -X POST \
   -H "content-type: application/json" \
   -d '{
 	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"getColor",
-	"args":[]
-}'
-echo
-echo
-
-echo "POST Invoke request"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin \
-  -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
 	"fcn":"mint",
 	"args":["1000000"]
 }'
 echo
 echo
-
-#echo "POST Invoke request"
-#echo
-#curl -s -X POST \
-#  http://localhost:4000/channels/mychannel/chaincodes/coin \
-#  -H "authorization: Bearer $ORG1_TOKEN" \
-#  -H "content-type: application/json" \
-#  -d '{
-#	"peers": ["localhost:7051", "localhost:7056"],
-#	"fcn":"balanceOf",
-#	"args":["1","4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5"]
-#}'
-#echo
-#echo
 
