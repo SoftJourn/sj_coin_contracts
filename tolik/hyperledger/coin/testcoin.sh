@@ -33,18 +33,6 @@ ORG1_TOKEN=$(echo $ORG1_TOKEN | jq ".token" | sed "s/\"//g")
 echo
 echo "ORG1 token is $ORG1_TOKEN"
 echo
-#echo
-#echo "POST Join Channel request"
-#echo
-#curl -s -X POST \
-#  http://localhost:4000/channels/mychannel/peers \
-#  -H "authorization: Bearer $ORG1_TOKEN" \
-#  -H "content-type: application/json" \
-#  -d '{
-#	"peers": ["localhost:7051","localhost:7056"]
-#}'
-#echo
-#echo
 
 echo "POST Install chaincode"
 echo
@@ -77,21 +65,16 @@ curl -s -X POST \
 echo
 echo
 
-echo "POST Invoke request"
+echo "GET query chaincode on peer1 of Org1"
 echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
+curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=getColor&args=%5B%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"getColor",
-	"args":[]
-}'
+  -H "content-type: application/json"
 echo
 echo
 
-echo "POST Invoke request"
+echo "POST Invoke request mint"
 echo
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
@@ -105,21 +88,16 @@ curl -s -X POST \
 echo
 echo
 
-echo "POST Invoke request"
+echo "QUERY request balanceOf"
 echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
+  curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=balanceOf&args=%5B%22$2%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"balanceOf",
-	"args":["'$2'"]
-}'
+  -H "content-type: application/json"
 echo
 echo
 
-echo "POST Invoke request"
+echo "POST Invoke request for transfer"
 echo
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
@@ -133,31 +111,21 @@ curl -s -X POST \
 echo
 echo
 
-echo "POST Invoke request"
+echo "QUERY request balanceOf"
 echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
+  curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=balanceOf&args=%5B%224e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"balanceOf",
-	"args":["4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5"]
-}'
+  -H "content-type: application/json"
 echo
 echo
 
-echo "POST Invoke request balanceOf"
+echo "QUERY request balanceOf"
 echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
+  curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=balanceOf&args=%5B%22$2%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"balanceOf",
-	"args":["'$2'"]
-}'
+  -H "content-type: application/json"
 echo
 echo
 
@@ -175,19 +143,29 @@ curl -s -X POST \
 echo
 echo
 
-echo "POST Invoke request for allowance"
+#echo "POST Invoke request for allowance"
+#echo
+#curl -s -X POST \
+#  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
+#  -H "authorization: Bearer $ORG1_TOKEN" \
+#  -H "content-type: application/json" \
+#  -d '{
+#	"peers": ["localhost:7051", "localhost:7056"],
+#	"fcn":"allowance",
+#	"args":["4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5"]
+#}'
+#echo
+#echo
+
+echo "GET query chaincode on peer1 of Org1: allowance?"
 echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
+curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=allowance&args=%5B%224e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"allowance",
-	"args":["4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5"]
-}'
+  -H "content-type: application/json"
 echo
 echo
+
 
 TESTLIST='"39d3f8d0655bd215e958890ea91b41330895a719cdefa9a690e0f59b2b4e9b14","4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5","553767d1cc2d34b5ac2ec1e45e1b8d51dc78ea091f5a16487ade1dd7e34c4097"'
 echo "POST Invoke request for distribute"
@@ -207,21 +185,13 @@ echo
 echo "***** checking balances *****"
 echo
 TESTLIST=$TESTLIST',"'$2'"'
-for i in `echo $TESTLIST|tr ',' ' '`; do
-echo "POST Invoke request balanceOf $i"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
+for i in `echo $TESTLIST|tr ',' ' '|sed 's/"//g'`; do
+  echo "GET query chaincode on peer1 of Org1: balnceOf [$i]"
+  echo
+  curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=balanceOf&args=%5B%22$i%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"balanceOf",
-	"args":["'$i'"]
-}'
-echo
-echo
-
+  -H "content-type: application/json"
+  echo
+  echo
 done
-echo
-echo

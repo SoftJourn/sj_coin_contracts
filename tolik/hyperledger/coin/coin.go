@@ -204,6 +204,8 @@ func (s *CoinSmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Respo
 	return shim.Error("Invalid Smart Contract function name")
 }
 
+/******************************************************************************************/
+
 func (s *CoinSmartContract) getColor(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
     return shim.Success([]byte(strconv.Itoa(tokenColor)))
 }
@@ -419,12 +421,12 @@ func (s *CoinSmartContract) distribute(APIstub shim.ChaincodeStubInterface, args
     if balance < Aval {
     	return shim.Error("Insufficient coins to distribute")
     }
-    n := len(args)
+    n := len(args) - 1
     if Aval/n < 1 {
     	return shim.Error("To few coins to distribute")
     }
     args[0] = strconv.Itoa(Aval / n)
-    for i := 1; i < n; i++ {
+    for i := 1; i <= n; i++ {
     	if i > 1 {
     		args[1] = args[i]
     	}
@@ -436,6 +438,7 @@ func (s *CoinSmartContract) distribute(APIstub shim.ChaincodeStubInterface, args
         	logger.Infof("Failed to send %s from %x to %x", args[0], msgSender, args[1])
         }
     }
+    logger.Info("########### coin distribute end ###########")
     return shim.Success([]byte{0x00})
 }
 

@@ -34,116 +34,63 @@ echo
 echo "ORG1 token is $ORG1_TOKEN"
 echo
 
-echo "POST Invoke request"
+echo "POST Invoke request mint"
 echo
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"getColor",
-	"args":[]
+        "peers": ["localhost:7051", "localhost:7056"],
+        "fcn":"mint",
+        "args":["1000000"]
 }'
 echo
 echo
 
-echo "POST Invoke request"
+echo "GET query chaincode on peer1 of Org1"
+echo
+curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=getColor&args=%5B%5D" \
+  -H "authorization: Bearer $ORG1_TOKEN" \
+  -H "content-type: application/json"
+echo
+echo
+
+echo "GET query chaincode on peer1 of Org1"
+echo
+curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=balanceOf&args=%5B%22$2%22%5D" \
+  -H "authorization: Bearer $ORG1_TOKEN" \
+  -H "content-type: application/json"
+echo
+echo
+
+TESTLIST='"39d3f8d0655bd215e958890ea91b41330895a719cdefa9a690e0f59b2b4e9b14","4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5","553767d1cc2d34b5ac2ec1e45e1b8d51dc78ea091f5a16487ade1dd7e34c4097"'
+echo "POST Invoke request for distribute"
 echo
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"mint",
-	"args":["1000000"]
+        "peers": ["localhost:7051", "localhost:7056"],
+        "fcn":"distribute",
+        "args":["1000",'$TESTLIST']
 }'
 echo
 echo
 
-echo "POST Invoke request"
+echo "***** checking balances *****"
 echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
+TESTLIST=$TESTLIST',"'$2'"'
+for i in `echo $TESTLIST|tr ',' ' '|sed 's/"//g'`; do
+  echo "GET query chaincode on peer1 of Org1: balnceOf [$i]"
+  echo
+  curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/coin$1?peer=peer1&fcn=balanceOf&args=%5B%22$i%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"balanceOf",
-	"args":["'$2'"]
-}'
-echo
-echo
-
-echo "POST Invoke request"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
-  -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"transfer",
-	"args":["1000","4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5"]
-}'
-echo
-echo
-
-echo "POST Invoke request"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
-  -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"balanceOf",
-	"args":["4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5"]
-}'
-echo
-echo
-
-echo "POST Invoke request"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
-  -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"balanceOf",
-	"args":["'$2'"]
-}'
-echo
-echo
-
-echo "POST Invoke request"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
-  -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"approve",
-	"args":["1000","4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5"]
-}'
-echo
-echo
-
-
-echo "POST Invoke request"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/coin$1 \
-  -H "authorization: Bearer $ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"allowance",
-	"args":["4e923c618bac62daeab4651c8e82d9c26e674f5cb9faf9eb0ef120a8ba00cba5"]
-}'
-echo
-echo
-
+  -H "content-type: application/json"
+  echo
+  echo
+done
