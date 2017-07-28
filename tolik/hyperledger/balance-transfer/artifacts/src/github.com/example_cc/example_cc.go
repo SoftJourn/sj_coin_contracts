@@ -18,12 +18,19 @@ package main
 
 
 import (
-	"fmt"
+    "encoding/base64"
+    "encoding/pem"
+    "crypto/x509"
+    "crypto/ecdsa"
+    "fmt"
 	"strconv"
 
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	//"github.com/hyperledger/fabric/msp"
+	//"github.com/hyperledger/fabric/msp/mgmt"
+	//mb "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
@@ -116,6 +123,37 @@ func (t *SimpleChaincode) hashCreator(stub shim.ChaincodeStubInterface) ([]byte,
 	if Creatorbytes == nil {
 		return nil, fmt.Errorf("Creator is not found")
 	}
+/*
+    m := mgmt.NewDeserializersManager()
+    //identity, err := m.Deserialize(Creatorbytes)
+    identity, err := m.GetLocalDeserializer().DeserializeIdentity(Creatorbytes)
+    if err != nil {
+    	logger.Info("Failed to deserialize identity")
+    }
+    logger.Info(identity)
+*/
+    // \n 7 Org1MSP 18 221 5 cert(732) \n
+    offset := int(Creatorbytes[1])+5
+    length := len(Creatorbytes)
+
+    var certificate []byte = Creatorbytes[offset:length-1]
+    //logger.Info(certificate)
+    //logger.Infof("%x", certificate)
+
+    block, _ := pem.Decode(certificate)
+    var cert* x509.Certificate
+    cert, _ = x509.ParseCertificate(block.Bytes)
+    ecdsaPublicKey := cert.PublicKey.(*ecdsa.PublicKey)
+
+    raw, err := x509.MarshalPKIXPublicKey(ecdsaPublicKey)
+    if err !=nil {
+    	return nil, fmt.Errorf("Failed to marshal public key")
+    }
+
+    logger.Infof("\n\n%x\n\n", raw)
+    encoded := base64.StdEncoding.EncodeToString(raw)
+    logger.Info(encoded)
+    logger.Info("\n\n")        
 
 	Creatorhash, err := factory.GetDefault().Hash(Creatorbytes, &bccsp.SHA256Opts{})
 	if err != nil {
