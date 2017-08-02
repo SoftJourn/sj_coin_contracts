@@ -9,6 +9,7 @@ import { ChannelComponent } from './components/channel/channel.component';
 import { ChaincodeComponent } from './components/chaincode/chaincode.component';
 import { MintComponent } from './components/mint/mint.component';
 import { TransferComponent } from './components/transfer/transfer.component';
+import {BalanceComponent} from "./components/balance/balance.component";
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { TransferComponent } from './components/transfer/transfer.component';
     ChannelComponent,
     ChaincodeComponent,
     MintComponent,
-    TransferComponent
+    TransferComponent,
+    BalanceComponent
   ],
   imports: [
     BrowserModule,

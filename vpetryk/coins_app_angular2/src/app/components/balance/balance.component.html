@@ -1,0 +1,17 @@
+<h2>Balance</h2>
+
+<div>
+  <form [formGroup]="balanceForm" (ngSubmit)="getBalance(balanceForm.value)" class="ui form">
+    <input type="text" placeholder="Recipient" [ngModel]="balanceOf"
+           [formControl]="balanceForm.get('balanceOf')">
+
+    <div *ngIf="!balanceForm.valid"
+         class="ui error message">Form is invalid</div>
+    <div>
+      <button type="submit" class="ui button">Get Balance</button>
+    </div>
+  </form>
+  <div>
+    <button class="ui button" (click)="getTransactionInfo()">Get Transaction Info </button>
+  </div>
+</div>

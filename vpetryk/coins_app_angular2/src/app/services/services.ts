@@ -4,6 +4,7 @@ import {ChannelService} from "./channel.service";
 import {ChaincodeService} from "./chaincode.service";
 import {MintService} from "./mint.service";
 import {TransferService} from "./transfer.service";
+import {BalanceService} from "./balance.service";
 
 export let servicesInjectables: Array<any> = [
   ChaincodeService,
@@ -11,5 +12,6 @@ export let servicesInjectables: Array<any> = [
   ChannelService,
   DataService,
   MintService,
-  TransferService
+  TransferService,
+  BalanceService
 ];
