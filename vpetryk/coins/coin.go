@@ -45,7 +45,12 @@ func (t *CoinChain) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
 	logger.Info("minter ", args[0])
 
-	err = stub.PutState(minter, []byte(args[0]))
+	minterBytes, err := json.Marshal(args[0])
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	err = stub.PutState(minter, minterBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -122,6 +127,7 @@ func (t *CoinChain) transfer(stub shim.ChaincodeStubInterface, args []string) pb
 	logger.Info("amount ", amount)
 
 	currentUser := t.getCurrentUser(stub)
+	logger.Info("Current user: ",currentUser.StringValue)
 	balancesMap := t.getMap(stub, balances)
 
 	if balancesMap[currentUser.StringValue] < amount {
@@ -320,6 +326,8 @@ func (t *CoinChain) mint(stub shim.ChaincodeStubInterface, args []string) pb.Res
 	json.Unmarshal(minterValue, &minterString)
 
 	currentUser := t.getCurrentUser(stub)
+	logger.Info("currentUser.StringValue", currentUser.StringValue)
+	logger.Info("minterString", minterString)
 
 	if currentUser.StringValue != minterString {
 		return shim.Error("No permissions")
