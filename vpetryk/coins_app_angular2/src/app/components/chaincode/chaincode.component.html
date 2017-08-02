@@ -1,0 +1,24 @@
+<h2>Chaincode</h2>
+<div>
+  <form [formGroup]="chaincodeForm" (ngSubmit)="deployChaincode(chaincodeForm.value)" class="ui form">
+    <input type="text" placeholder="Chaincode Name" [ngModel]="chaincodeName"
+           [formControl]="chaincodeForm.get('chaincodeName')">
+    <input type="text" placeholder="Chaincode Path" [ngModel]="chaincodePath"
+           [formControl]="chaincodeForm.get('chaincodePath')">
+    <input type="text" placeholder="Chaincode Version" [ngModel]="chaincodeVersion"
+           [formControl]="chaincodeForm.get('chaincodeVersion')">
+
+    <div *ngIf="!chaincodeForm.valid"
+         class="ui error message">Form is invalid</div>
+    <div>
+      <button type="submit" class="ui button">Deploy Chaincode</button>
+    </div>
+  </form>
+  <div style="padding: 5px 0">
+    <button (click)="initializeChaincode()">Initialize Chaincode</button>
+  </div>
+  <div style="padding: 5px 0">
+    <textarea name="userData" [ngModel]="data.chaincode.lastResult" cols="60" rows="4"></textarea>
+  </div>
+
+</div>

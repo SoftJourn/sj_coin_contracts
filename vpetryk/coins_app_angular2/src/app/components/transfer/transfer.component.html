@@ -1,0 +1,15 @@
+<h2>Transfer</h2>
+<div>
+  <form [formGroup]="transferForm" (ngSubmit)="transfer(transferForm.value)" class="ui form">
+    <input type="text" placeholder="Recipient" [ngModel]="transferTo"
+           [formControl]="transferForm.get('transferTo')">
+    <input type="number" placeholder="Amount" [ngModel]="amount"
+           [formControl]="transferForm.get('amount')">
+
+    <div *ngIf="!transferForm.valid"
+         class="ui error message">Form is invalid</div>
+    <div>
+      <button type="submit" class="ui button">Transfer</button>
+    </div>
+  </form>
+</div>

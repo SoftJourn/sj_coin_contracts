@@ -1,0 +1,13 @@
+<h2>Mint</h2>
+<div>
+  <form [formGroup]="mintForm" (ngSubmit)="mint(mintForm.value)" class="ui form">
+    <input type="number" placeholder="Amount" [ngModel]="amount"
+           [formControl]="mintForm.get('amount')">
+
+    <div *ngIf="!mintForm.valid"
+         class="ui error message">Form is invalid</div>
+    <div>
+      <button type="submit" class="ui button">Mint</button>
+    </div>
+  </form>
+</div>
