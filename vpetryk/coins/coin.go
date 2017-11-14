@@ -12,15 +12,21 @@ import (
 	"github.com/hyperledger/fabric/common/util"
 )
 
-var logger = shim.NewLogger("coin_cc")
+const coinName string = "sjcoin"
+
+var logger = shim.NewLogger(coinName)
 
 type CoinChain struct {
 }
 
 var minter string = "minter"
-var tokenColor string = "tokenColor"
+var minterAccount string
 var balances string = "balances"
 var allowed string = "allowed"
+
+var tokenColor string = "tokenColor"
+
+var channel string = "mychannel"
 
 type CurrentUser struct{
 	HashValue []byte
@@ -33,19 +39,39 @@ func (t *CoinChain) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	logger.Info("_____ coin_cc Init _____")
 
 	_, args := stub.GetFunctionAndParameters()
+
+	logger.Info("args:", args)
+
 	if len(args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expected 2")
 	}
 
 	color := args[1]
-	err := stub.PutState(tokenColor, []byte(color))
+
+	tokenColorKey, err := stub.CreateCompositeKey(coinName, []string{color})
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	logger.Info("minter ", args[0])
+	isKey, err := stub.GetState(tokenColor)
+	logger.Info("isKey ", isKey)
 
-	err = stub.PutState(minter, []byte(args[0]))
+	err = stub.PutState(tokenColor, []byte(tokenColorKey))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	logger.Info("tokenColorKey ", tokenColorKey)
+
+	logger.Info("minterAccount ", args[0])
+
+	minterAccount = args[0]
+
+	minterBytes, err := json.Marshal(args[0])
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	err = stub.PutState(minter, minterBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -53,11 +79,20 @@ func (t *CoinChain) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	currentUser := t.getCurrentUser(stub)
 	logger.Info("Current User ", currentUser.StringValue)
 
-	balancesMap := map[string]uint{args[0]:100, currentUser.StringValue:100}
-	t.saveMap(stub, balances, balancesMap);
+	balancesMap := t.getMap(stub, balances)
+	logger.Info("currentBalancesMap ", balancesMap)
 
-	allowedMap := map[string]uint{}
-	t.saveMap(stub, allowed, allowedMap)
+	if len(balancesMap) == 0 {
+		balancesMap = map[string]uint{args[0]:0, currentUser.StringValue:0}
+		t.saveMap(stub, balances, balancesMap);
+	}
+
+	allowedMap := t.getMap(stub, allowed)
+	logger.Info("currentallowedMap ", allowedMap)
+	if len(allowedMap) == 0 {
+		allowedMap = map[string]uint{}
+		t.saveMap(stub, allowed, allowedMap)
+	}
 
 	return shim.Success([]byte(color))
 }
@@ -90,20 +125,14 @@ func (t *CoinChain) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.allowance(stub, args)
 	} else if function == "distribute" {
 		return t.distribute(stub, args)
+	} else if function == "convert" {
+		return t.convert(stub, args)
+	} else if function == "withdraw" {
+		return t.withdraw(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
 	return shim.Error("Received unknown function invocation")
 }
-
-//func (t *CoinChain) Query(stub shim.ChaincodeStubInterface, function string, args []string) pb.Response {
-//	fmt.Println("query is running " + function)
-//
-//	if function == "getColor" {
-//		return t.getColor(stub, args)
-//	}
-//	fmt.Println("query did not find func: " + function)
-//	return shim.Error("Received unknown function query: " + function)
-//}
 
 func (t *CoinChain) transfer(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
@@ -112,16 +141,19 @@ func (t *CoinChain) transfer(stub shim.ChaincodeStubInterface, args []string) pb
 	}
 
 	var receiver string = args[0]
+	logger.Info("receiver ", receiver)
 
+	logger.Info("args[1] ", args[1])
 	amount := t.parseAmountUint(args[1])
+	logger.Info("amount ", amount)
+
+
 	if amount == 0 {
 		return shim.Error("Incorrect amount")
 	}
 
-	logger.Info("receiver ", receiver)
-	logger.Info("amount ", amount)
-
 	currentUser := t.getCurrentUser(stub)
+	logger.Info("Current user: ",currentUser.StringValue)
 	balancesMap := t.getMap(stub, balances)
 
 	if balancesMap[currentUser.StringValue] < amount {
@@ -134,7 +166,7 @@ func (t *CoinChain) transfer(stub shim.ChaincodeStubInterface, args []string) pb
 	t.saveMap(stub, balances, balancesMap)
 	//TODO transfer event
 
-	return shim.Success(nil)
+	return shim.Success([]byte(strconv.FormatUint(uint64(balancesMap[receiver]), 10)))
 }
 
 func (t *CoinChain) transferFrom(stub shim.ChaincodeStubInterface, args []string) pb.Response {
@@ -231,8 +263,6 @@ func (t *CoinChain) approveAndCall(stub shim.ChaincodeStubInterface, args []stri
 
 func (t *CoinChain) callChaincode(stub shim.ChaincodeStubInterface, chaincodeName string, queryArgs [][]byte) pb.Response {
 
-	channel := "mychannel" //TODO
-
 	response := stub.InvokeChaincode(chaincodeName, queryArgs, channel)
 	if response.Status == shim.OK {
 		return shim.Success(nil)
@@ -258,7 +288,10 @@ func (t *CoinChain) setColor(stub shim.ChaincodeStubInterface, args []string) pb
 	}
 
 	color := args[0]
-	err = stub.PutState(tokenColor, []byte(color))
+
+	tokenColorKey, err := stub.CreateCompositeKey(coinName, []string{color})
+
+	err = stub.PutState(tokenColor, []byte(tokenColorKey))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -320,6 +353,8 @@ func (t *CoinChain) mint(stub shim.ChaincodeStubInterface, args []string) pb.Res
 	json.Unmarshal(minterValue, &minterString)
 
 	currentUser := t.getCurrentUser(stub)
+	logger.Info("currentUser.StringValue", currentUser.StringValue)
+	logger.Info("minterString", minterString)
 
 	if currentUser.StringValue != minterString {
 		return shim.Error("No permissions")
@@ -335,7 +370,7 @@ func (t *CoinChain) mint(stub shim.ChaincodeStubInterface, args []string) pb.Res
 	balancesMap[currentUser.StringValue] += amount
 	t.saveMap(stub, balances, balancesMap)
 
-	return shim.Success(nil)
+	return shim.Success([]byte(strconv.FormatUint(uint64(balancesMap[currentUser.StringValue]), 10)))
 }
 
 func (t *CoinChain) distribute(stub shim.ChaincodeStubInterface, args []string) pb.Response {
@@ -432,6 +467,63 @@ func (t *CoinChain) allowance(stub shim.ChaincodeStubInterface, args []string) p
 		return shim.Error(err.Error())
 	}
 	return shim.Success([]byte(fmt.Sprintf("%d", allowedMap[allowedKey])))
+}
+
+func (t *CoinChain) convert(stub shim.ChaincodeStubInterface, args []string ) pb.Response {
+
+	currency := args[0]
+	logger.Info("currency : ", currency)
+	account := args[1]
+	logger.Info("account : ", account)
+	amount := t.parseAmountUint(args[2])
+	logger.Info("args[2] : ", args[2])
+	logger.Info("amount : ", amount)
+
+	if (amount == 0) {
+		return shim.Error("Error. Amount must be > 0")
+	}
+
+	queryArgs := util.ToChaincodeArgs("withdraw", account, args[2])
+	response := stub.InvokeChaincode(currency, queryArgs, channel)
+	logger.Info("Withdraw Result status : ", response.Status)
+
+	if (response.Status == shim.OK){
+		balancesMap := t.getMap(stub, balances)
+		logger.Info("balancesMap[minterAccount] : ",  balancesMap[minterAccount])
+		logger.Info("amount : ", amount)
+		if (balancesMap[minterAccount] < amount) {
+			return shim.Error("Failed convert. Minter has no money")
+		}
+		balancesMap[account] += amount
+		balancesMap[minterAccount] -= amount
+		t.saveMap(stub, balances, balancesMap)
+		logger.Info("Convert success : ", amount)
+		return shim.Success(nil)
+	} else {
+		logger.Info("Convert failed : ", amount)
+		return shim.Error(response.Message)
+	}
+
+	return shim.Success(nil)
+}
+
+func (t *CoinChain) withdraw(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	account := args[0]
+	amount := t.parseAmountUint(args[1])
+
+	balancesMap := t.getMap(stub, balances)
+
+	if balancesMap[account] < amount {
+		logger.Error("Withdaraw failed ", amount)
+		return shim.Error("Failed withdraw: Not enough funds")
+	} else {
+		balancesMap[account] -= amount
+		balancesMap[minterAccount] += amount
+		t.saveMap(stub, balances, balancesMap)
+		logger.Info("Withdraw success ", amount)
+		return shim.Success(nil)
+	}
 }
 
 func (t *CoinChain) parseAmountUint(amount string) uint {
