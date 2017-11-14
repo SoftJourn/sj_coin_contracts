@@ -1,4 +1,5 @@
 // requires
+var fs = require ('fs');
 var prompt = require('prompt');
 var erisC = require('@monax/legacy-contracts');
 
@@ -12,7 +13,7 @@ var erisdbURL = "http://localhost:1337/rpc";
 
 // get the abi and deployed data squared away
 var idisContractAddress = "52DE1C4180124EFF078A718AB35E1DD2F1A4DE69";
-var idisAbi = [{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"retVal","type":"uint256"}],"payable":false,"type":"function"}];
+var idisAbi = JSON.parse(fs.readFileSync("./abi/IdisContractsFTW.abi", 'utf8'));
 
 // properly instantiate the contract objects manager using the erisdb URL
 // and the account data (which is a temporary hack)
@@ -28,7 +29,7 @@ function getValue(callback) {
   idisContract.get(function(error, result){
     if (error) { throw error }
     console.log("Idi's number is:\t\t\t");
-    console.log(result.toString());
+    //console.log(result);
     callback();
   });
 }
@@ -40,7 +41,7 @@ function changeValue() {
   prompt.start();
   prompt.get(['value'], function (error, result) {
     if (error) { throw error }
-    console.log(result.value);
+    //console.log(result.value);
     setValue(result.value)
   });
 }
