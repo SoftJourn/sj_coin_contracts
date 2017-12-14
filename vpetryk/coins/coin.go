@@ -377,29 +377,36 @@ func (t *CoinChain) balanceOf(stub shim.ChaincodeStubInterface, args []string) p
 func (t *CoinChain) withdrawFromFoundation(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	/* args
-		0 - foundation name
-		1 - receiver ID
-		2 - amount
-		3 - notes
+		0 - foundation chaincode
+		1 - foundation name
+		2 - receiver ID
+		3 - amount
+		4 - notes
 	*/
 
-	if len(args) != 4 {
-		return shim.Error("Incorrect number of arguments. Expecting 4")
+	if len(args) != 5 {
+		return shim.Error("Incorrect number of arguments. Expecting 5.")
 	}
 
-	foundationName := args[0]
-	receiver := args[1]
+	foundationChaincode := args[0]
+	foundationName := args[1]
+	receiver := args[2]
+	amountString := args[3]
+	notes := args[4]
 
-	logger.Info("withdrawFromFoundation foundationName", foundationName)
-	logger.Info("withdrawFromFoundation receiver", receiver)
-	logger.Info("withdrawFromFoundation amount", args[2])
-	logger.Info("withdrawFromFoundation note", args[3])
+	logger.Info("<<< invoked withdrawFromFoundation - foundationName: ", foundationName)
 
-	queryArgs := util.ToChaincodeArgs("isWithdrawAllowed", foundationName, args[2], args[3])
-	logger.Info("queryArgs: ", queryArgs)
-	response := stub.InvokeChaincode(foundationName, queryArgs, channelName)
+	logger.Info("foundation Chaincode: ", foundationChaincode)
+	logger.Info("foundation Name: ", foundationName)
+	logger.Info("receiver: ", receiver)
+	logger.Info("amount: ", amountString)
+	logger.Info("notes: ", notes)
 
-	logger.Info("isWithdrawAllowed response", response)
+	queryArgs := util.ToChaincodeArgs("isWithdrawAllowed", foundationName, amountString, notes)
+	logger.Infof("queryArgs: %x ", queryArgs)
+	response := stub.InvokeChaincode(foundationChaincode, queryArgs, channelName)
+
+	logger.Infof("isWithdrawAllowed response: %x", response)
 
 	if response.Status == shim.OK {
 		result, err := strconv.ParseBool(fmt.Sprintf("%s", response.Payload))
@@ -412,7 +419,7 @@ func (t *CoinChain) withdrawFromFoundation(stub shim.ChaincodeStubInterface, arg
 			return shim.Error("Failed. Withdrawal is not allowed")
 		}
 
-		foundationAccount, err := stub.CreateCompositeKey(foundationAccountType, []string{args[0]})
+		foundationAccount, err := stub.CreateCompositeKey(foundationAccountType, []string{foundationName})
 		if err != nil {
 			return shim.Error(err.Error())
 		}
@@ -422,20 +429,19 @@ func (t *CoinChain) withdrawFromFoundation(stub shim.ChaincodeStubInterface, arg
 			return shim.Error(err.Error())
 		}
 
-		amount := t.parseAmountUint(args[2])
+		amount := t.parseAmountUint(amountString)
 		balancesMap := t.getMap(stub, balancesKey)
 
 		if balancesMap[foundationAccount] < amount {
-			logger.Error("Withdaraw failed ", amount)
+			logger.Error("Not enough funds. Withdaraw failed: ", amount)
 			return shim.Error("Failed withdraw: Not enough funds")
 		} else {
 			balancesMap[foundationAccount] -= amount
 			balancesMap[receiverAccount] += amount
 			t.saveMap(stub, balancesKey, balancesMap)
-			logger.Info("Withdraw success ", amount)
-			logger.Info("foundationAccount ", balancesMap[foundationAccount])
-			return shim.Success([]byte(strconv.FormatBool(true)))
-			//return shim.Success([]byte(strconv.FormatUint(uint64(balancesMap[foundationAccount]), 10)))
+			logger.Info("withdraw success: ", amount)
+			logger.Info("foundationAccount: ", balancesMap[foundationAccount])
+			return shim.Success([]byte(strconv.FormatUint(uint64(balancesMap[foundationAccount]), 10)))
 		}
 	} else {
 		return shim.Error(response.Message)
